@@ -11,25 +11,33 @@ namespace LongRunDurFun56
         public static string Delay = Environment.GetEnvironmentVariable("delay") ?? "60000";
 
         [Function(nameof(Function1))]
-        public static async Task<List<string>> RunOrchestrator(
+        public static async Task RunOrchestrator(
             [OrchestrationTrigger] TaskOrchestrationContext context)
         {
+            var options = TaskOptions.FromRetryPolicy(new RetryPolicy(
+                maxNumberOfAttempts: 3,
+                firstRetryInterval: TimeSpan.FromSeconds(5)));
+
+            await context.CallActivityAsync(nameof(SayHello), options: options);
+
             ILogger logger = context.CreateReplaySafeLogger(nameof(Function1));
             logger.LogInformation("Saying hello.");
-            var outputs = new List<string>();
+            //var outputs = new List<string>();
 
             // Replace name and input with values relevant for your Durable Functions Activity
-            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Tokyo"));
-            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Seattle"));
-            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "London"));
+            //outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Tokyo"));
+            //outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Seattle"));
+            //outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "London"));
 
             // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
-            return outputs;
+            //return outputs;
         }
 
         [Function(nameof(SayHello))]
-        public static string SayHello([ActivityTrigger] string name, FunctionContext executionContext)
+        public static async Task<string> SayHello([ActivityTrigger] string name, FunctionContext executionContext)
         {
+            throw new Exception();
+
             ILogger logger = executionContext.GetLogger("SayHello");
 
             Thread.Sleep(Convert.ToInt32(Delay));
